@@ -1,7 +1,7 @@
 const bcrypt=require('bcrypt')
 const Student=require('../model/Student')
 const jwt= require('jsonwebtoken')
-const logIn=async()=>{
+const logIn=async(req,res)=>{
  const{id,password}=req.body
  if (!id || !password) {
     return res.status(400).json({message:'All fields are required'})
@@ -20,7 +20,7 @@ const logIn=async()=>{
     const accessToken = jwt.sign(studentInfo,process.env.ACCESS_TOKEN_SECRET)
     res.json({accessToken:accessToken})
 } 
-const signUp=async()=>{
+const signUp=async(req,res)=>{
     const {lastname,name,password,email,phone,id,profil,role,studentClass}=req.body
     if(!lastname||!name||!password||!phone||!id||!role||!studentClass)
         return res.status(400).json({message:'All fields are required'})

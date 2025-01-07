@@ -4,13 +4,20 @@ const route=express.Router()
 
 
 route.get("/",TaskController.getAllTasks)
-route.get("taskbystudentid/",TaskController.getTaskByStudentId)//student role
-route.get("taskbyteachstu/:studentId/",TaskController.getTaskByTeacherAndStudentId)//teacher role
-route.get("taskbyteachtask/:task_name/",TaskController.getTaskByTeacherAndName)//teacher role
-route.get("taskbytaskid/:_id",TaskController.getTaskById)//teacher&idteacher student&idstudent
-route.post("/",TaskController.createTask)
-route.put("/teacher",TaskController.updateTaskTeacher)
-route.put("/student",TaskController.updateTaskStudent)
-// route.put("/",TaskController.updateTask)
+route.get("/byteacher/:task_name",TaskController.getTaskByTeacherAndName)//teacher
+route.get("/byteachstud/:student_id",TaskController.getTaskByTeacherAndStudentId)//teacher
+route.get("/bystududent",TaskController.getTaskByStudentId)//stundent role
+route.get("/taskbyid/:id",TaskController.getTaskById)//student...
+//route.post("/",TaskController.createTask)
+route.post("/taskbyclass",TaskController.createTaskByClass)
+route.put("/teachers",TaskController.updateTaskTeacher)
+route.put("/byclass",TaskController.updateTaskTeacherByClass)
+route.put("/students",TaskController.getTaskByStudentId)
+//route.put("/",TaskController.updateTask)
 route.delete("/",TaskController.deleteTask)
+route.delete("/byclass",TaskController.deleteTaskByClassName)
 module.exports=route
+
+
+
+//module.exports={deleteTaskByClassName,updateTaskTeacherByClass,getTaskByStudentId,getAllTasks,getTaskById,createTaskByClass,updateTaskTeacher,updateTaskStudent,deleteTask,getTaskByTeacherAndStudentId,getTaskByTeacherAndName}

@@ -10,9 +10,9 @@ const VerifyStudent=(req,res,next)=>{
         process.env.ACCESS_TOKEN_SECRET,
         (err,decoded)=>{
             if(err)return res.status(403).json({message :'Forbidden'})
-                  req.studentInfo=decoded
+                  req.user=decoded
+                  next(req,res)
             }
     )
-
 }
 module.exports=VerifyStudent
