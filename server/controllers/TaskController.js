@@ -1,4 +1,5 @@
 const Task=require('../model/Task')
+const Student=require('../model/Student')
 const getAllTasks=async(req,res)=>{
 const tasks=await Task.find().lean()
 if (!tasks)
@@ -6,22 +7,21 @@ if (!tasks)
 res.json(tasks)
 }
 const getTaskByStudentId=async(req,res)=>{
-    const {studentId}=req.params
-    const task=await Task.find({student_id:studentId}).lean()
+    const task=await Task.find({student_id:req.user.id}).lean()
     if (!task)
         return res.status(400).send("No task")
     res.json(task)
     }
-    getTaskByTeacherAndName=async(req,res)=>{
-        const {task_name,teacher_id}=req.params
-        const tasks=await Task.find({status:{$in:["done","checked"]},name:task_name,teacher_id:teacher_id}).lean()
+ const getTaskByTeacherAndName=async(req,res)=>{
+        const {task_name}=req.params
+        const tasks=await Task.find({status:{$in:["done","checked"]},name:task_name,teacher_id:req.user.id}).lean()
         if(!tasks)
             return res.status(400).send("no tasks")
         res.json(tasks)
     }
     const getTaskByTeacherAndStudentId=async(req,res)=>{
-        const {studentId,teacherId}=req.params
-        const task=await Task.find({studentId:studentId,teacher_id:teacherId,status:$in["done","cheked"]}).lean()
+        const {studentId}=req.params
+        const task=await Task.find({studentId:studentId,teacher_id:req.user.id,status:$in["done","cheked"]}).lean()
         if (!task)
             return res.status(400).send("No task")
         res.json(task)
@@ -34,16 +34,32 @@ const getTaskByStudentId=async(req,res)=>{
         res.json(task)
     }
 const createTask=async(req,res)=>{
-    const {student_id,content,last_date,comments,name,teacher_id}=req.body
-    if(!student_id||!name||!teacher_id||!content)
+    const {content,last_date,comments,name}=req.body
+    if(!name||!content)
         return res.status(400).json({message:'field is required'})
-    const duplicate = await Task.findOne({name,teacher_id}).lean()
+    const duplicate = await Task.findOne({name,teacher_id:req.user.id}).lean()
     if(duplicate){
        return res.status(409).json({message:"Duplicate name"})}
-    const task=await Task.create( {student_id,content,last_date,comments,name,teacher_id})
+    const task=await Task.create( {content,last_date,comments,name,teacher_id:req.user.id})
         if (!task)
             return res.status(400).send("Create Failed")
     res.json(task)
+ }
+ const createTaskByClass=async(req,res)=>{
+    const {content,last_date,comments,name,classST}=req.body
+    if(!name||!content||!class_)
+        return res.status(400).json({message:'field is required'})
+    const duplicate = await Task.findOne({name,teacher_id:req.user.id}).lean()
+    if(duplicate){
+       return res.status(409).json({message:"Duplicate name"})}
+    const students=Student.find({studentClass:class_})
+    const tasks=students.map(async(student)=>{
+        const task=await Task.create( {content,last_date,comments,name,teacher_id:req.user.id})
+        if (!task)
+            return res.status(400).send("Create Failed")
+        return task
+    })
+    res.json(tasks)
  }
 //  const updateTask=async(req,res)=>{
 //     const {_id,student_id,grade,content,status,last_date,comments,name,teacher_id}=req.body
@@ -69,6 +85,29 @@ const createTask=async(req,res)=>{
 //         res.json(savedTask)
 //  }
  const updateTaskTeacher=async(req,res)=>{
+    const {_id,student_id,grade,content,status,last_date,comments,name}=req.body
+        if(!_id||!student_id)
+            return res.status(400).json({message:'field is required'})
+        const task=await Task.findById(_id).exec()
+        if (!task)
+            return res.status(400).send("No task")
+        const duplicate = await Task.findOne({name,teacher_id}).lean()
+        if(duplicate){
+            return res.status(409).json({message:"Duplicate name"})}
+        task.student_id=student_id
+        task.teacher_id=teacher_id
+        task.name=name
+        task.grade=grade
+        task.content=content
+        task.status=status
+        task.last_date=last_date
+        task.comments=comments
+        const savedTask=await task.save()
+        if (!savedTask)
+            return res.status(400).send("Update Failed")
+        res.json(savedTask)
+ }
+ const updateTaskTeacherByClass=async(req,res)=>{
     const {_id,student_id,grade,content,status,last_date,comments,name,teacher_id}=req.body
         if(!_id||!student_id||!teacher_id)
             return res.status(400).json({message:'field is required'})
@@ -119,4 +158,4 @@ const deletedTask=await Task.deleteOne()
      res.status(400).send("Delete Failed")
  
  }
-module.exports={getTaskByStudentId,getAllTasks,getTaskById,createTask,updateTaskTeacher,updateTaskStudent,deleteTask,getTaskByTeacherAndStudentId}
+module.exports={getTaskByStudentId,getAllTasks,getTaskById,createTask,updateTaskTeacher,updateTaskStudent,deleteTask,getTaskByTeacherAndStudentId,getTaskByTeacherAndName}
